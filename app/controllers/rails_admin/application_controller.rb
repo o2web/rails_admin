@@ -15,6 +15,8 @@ module RailsAdmin
     before_filter :_authorize!
     before_filter :_audit!
 
+    before_action :set_paper_trail_whodunnit
+
     helper_method :_current_user, :_get_plugin_name
 
     attr_reader :object, :model_config, :abstract_model, :authorization_adapter
@@ -36,6 +38,14 @@ module RailsAdmin
 
     def _current_user
       instance_eval(&RailsAdmin::Config.current_user_method)
+    end
+
+    def user_for_paper_trail
+      instance_eval(&RailsAdmin::Config.current_user_method).try(:id) || instance_eval(&RailsAdmin::Config.current_user_method)
+    end
+
+    def paper_trail_enabled_for_controller
+      true
     end
 
   private
@@ -70,6 +80,10 @@ module RailsAdmin
       flash[:error] = I18n.t('admin.flash.model_not_found', model: @model_name)
       params[:action] = 'dashboard'
       dashboard
+    end
+
+    def set_paper_trail_whodunnit
+      ::PaperTrail.whodunnit = user_for_paper_trail
     end
   end
 end
